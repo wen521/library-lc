@@ -1,9 +1,10 @@
 package com.even.lc.service;
 
 import com.even.lc.dao.BookDao;
-import com.even.lc.dao.CategoryDao;
-import com.even.lc.pojo.Book;
-import com.even.lc.pojo.Category;
+import com.even.lc.entity.Book;
+import com.even.lc.entity.Category;
+import com.even.lc.redis.RedisService;
+import com.even.lc.util.CastUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,26 @@ public class BookService {
     @Autowired
     private CategoryService categoryService;
 
+    @Autowired
+    private RedisService redisService;
+
     /**
      * 查出所有书籍
      * @return
      */
     public List<Book>list (){
-        Sort sort=new Sort(Sort.Direction.DESC,"id");
-        return bookDao.findAll(sort);
+        List<Book> books;
+        String key = "bookList";
+        Object bookCache = redisService.get(key);
+
+        if (bookCache == null){
+            Sort sort = new Sort(Sort.Direction.DESC,"id"); //按id倒序排列
+            books = bookDao.findAll(sort);
+            redisService.set(key,books);
+        }else {
+            books = CastUtils.objectConvertToList(bookCache,Book.class);
+        }
+        return books;
     }
 
     /**
@@ -34,7 +48,14 @@ public class BookService {
      * @param book
      */
     public void addOrUpdate(Book book){
+        redisService.delete("booklist");
         bookDao.save(book);
+        try{
+            Thread.sleep(500);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+        redisService.delete("booklist");
     }
 
     /**
@@ -42,7 +63,14 @@ public class BookService {
      * @param id
      */
     public void deleteById(int id){
+        redisService.delete("booklist");
         bookDao.deleteById(id);
+        try{
+            Thread.sleep(500);
+        }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+        redisService.delete("booklist");
     }
 
     /**

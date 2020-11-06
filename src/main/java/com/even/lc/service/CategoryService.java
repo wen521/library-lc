@@ -1,7 +1,7 @@
 package com.even.lc.service;
 
 import com.even.lc.dao.CategoryDao;
-import com.even.lc.pojo.Category;
+import com.even.lc.entity.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ public class CategoryService {
     private CategoryDao categoryDao;
 
     /**
-     * 分类查找，并按照id排序
+     * 分类查找，并按照id倒序排列
      * @return
      */
     public List<Category> list(){

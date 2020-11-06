@@ -1,50 +1,56 @@
 package com.even.lc.realm;
 
-import com.even.lc.pojo.User;
+import com.even.lc.entity.User;
+import com.even.lc.service.AdminPermissionService;
+import com.even.lc.service.AdminRolePermissionService;
+import com.even.lc.service.AdminRoleService;
 import com.even.lc.service.UserService;
-import org.apache.shiro.authc.AuthenticationException;
-import org.apache.shiro.authc.AuthenticationInfo;
-import org.apache.shiro.authc.AuthenticationToken;
-import org.apache.shiro.authc.SimpleAuthenticationInfo;
+import javafx.scene.effect.SepiaTone;
+import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.Permission;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.ObjectUtils;
+
+import java.util.Set;
 
 public class JCRealm extends AuthorizingRealm {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private AdminPermissionService adminPermissionService;
+    @Autowired
+    private AdminRoleService adminRoleService;
 
-    /**
-     * 授权
-     * @param principalCollection
-     * @return
-     */
+    // 重写获取授权信息方法
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        SimpleAuthorizationInfo simpleAuthorizationInfo=new SimpleAuthorizationInfo();
-        return  simpleAuthorizationInfo;
+        // 获取当前用户的所有权限
+        String username = principalCollection.getPrimaryPrincipal().toString();
+        Set<String> permissions = adminPermissionService.listPermissionURLsByUser(username);
+
+        // 将权限放入授权信息中
+        SimpleAuthorizationInfo s = new SimpleAuthorizationInfo();
+        s.setStringPermissions(permissions);
+        return s;
     }
 
-    /**
-     * 获取认证信息
-     * 通过token中用户名 找到数据库中的password，salt等信息  并返回
-     * @param token
-     * @return
-     * @throws AuthenticationException
-     */
+    // 获取认证信息，即根据 token 中的用户名从数据库中获取密码、盐等并返回
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException {
-        String username=token.getPrincipal().toString();
-        User user =userService.getByName(username);
-
-        String passwordInDB=user.getPassword();
-        String salt=user.getSalt();
-        SimpleAuthenticationInfo simpleAuthenticationInfo=new SimpleAuthenticationInfo(username,passwordInDB, ByteSource.Util.bytes(salt),getName());
-
-        return simpleAuthenticationInfo;
+        String userName = token.getPrincipal().toString();
+        User user = userService.findByUsername(userName);
+        if (ObjectUtils.isEmpty(user)) {
+            throw new UnknownAccountException();
+        }
+        String passwordInDB = user.getPassword();
+        String salt = user.getSalt();
+        SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(userName, passwordInDB, ByteSource.Util.bytes(salt), getName());
+        return authenticationInfo;
     }
 }

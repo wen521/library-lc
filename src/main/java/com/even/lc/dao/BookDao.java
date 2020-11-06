@@ -1,7 +1,7 @@
 package com.even.lc.dao;
 
-import com.even.lc.pojo.Book;
-import com.even.lc.pojo.Category;
+import com.even.lc.entity.Book;
+import com.even.lc.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

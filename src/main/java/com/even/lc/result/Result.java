@@ -1,7 +1,6 @@
 package com.even.lc.result;
 
 
-//@Data
 public class Result {
     private int code;
     private String message;
@@ -30,6 +29,7 @@ public class Result {
     public void setMessage(String message) {
         this.message = message;
     }
+
 
     public Result(int code, String message, Object data) {
         this.code=code;

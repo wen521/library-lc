@@ -1,15 +1,15 @@
 package com.even.lc.controller;
 
-import com.even.lc.pojo.Book;
+import com.even.lc.entity.Book;
+import com.even.lc.result.Result;
+import com.even.lc.result.ResultFactory;
 import com.even.lc.service.BookService;
-import com.even.lc.service.CategoryService;
 import com.even.lc.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -27,40 +27,43 @@ public class LibraryController {
      */
     @CrossOrigin
     @GetMapping("/api/books")
-    public List<Book> list ()throws Exception{
-        return bookService.list();
+    public Result listBooks(){
+        return ResultFactory.buildSuccessFactory(bookService.list());
     }
 
     @CrossOrigin
-    @PostMapping("/api/books")
-    public Book addOrUpdate(@RequestBody Book book) throws Exception{
+    @PostMapping("/api/admin/content/books")
+    public Result addOrUpdateBooks(@RequestBody @Valid Book book) throws Exception{
         bookService.addOrUpdate(book);
-        return book;
+        return ResultFactory.buildSuccessFactory("修改成功");
     }
 
     @CrossOrigin
-    @PostMapping("/api/delete")
-    public void delete(@RequestBody Book  book) throws Exception{
+    @PostMapping("/api/admin/content/books/delete")
+    public Result deleteBook(@RequestBody @Valid Book  book) throws Exception{
         bookService.deleteById(book.getId());
+        return ResultFactory.buildSuccessFactory("删除成功");
     }
 
     @CrossOrigin
     @GetMapping("/api/categories/{cid}/books")
-    public List<Book> listByCategory(@PathVariable("cid") int cid) throws Exception{
+    public Result listByCategory(@PathVariable("cid") int cid) throws Exception{
 
-        if (0!=cid)
-            return bookService.listByCategory(cid);
-        return list();
+        if (0!=cid) {
+            return ResultFactory.buildSuccessFactory(bookService.listByCategory(cid));
+        }else {
+        return ResultFactory.buildSuccessFactory(bookService.list());
+        }
     }
 
     @CrossOrigin
     @GetMapping("/api/search")
-    public List<Book> searchResult(@RequestParam("keywords") String keywords) {
+    public Result searchResult(@RequestParam("keywords") String keywords) {
         // 关键词为空时查询出所有书籍
         if ("".equals(keywords)) {
-            return bookService.list();
+            return ResultFactory.buildSuccessFactory(bookService.list());
         } else {
-            return bookService.Search(keywords);
+            return ResultFactory.buildSuccessFactory(bookService.Search(keywords));
         }
     }
 
@@ -73,7 +76,7 @@ public class LibraryController {
      * @throws Exception
      */
     @CrossOrigin
-    @PostMapping("api/covers")
+    @PostMapping("api/admin/content/books/covers")
     public String coversUpload(MultipartFile file) throws Exception {
         String folder = "D:/workspace/img";
         File imageFolder = new File(folder);

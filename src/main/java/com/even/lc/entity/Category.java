@@ -1,4 +1,4 @@
-package com.even.lc.pojo;
+package com.even.lc.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
